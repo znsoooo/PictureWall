@@ -83,10 +83,18 @@ cv2.namedWindow('lsx')
 cv2.setMouseCallback('lsx', pic.OnMouse)
 
 
-for filename in walk(folder, ['.jpg']):
-    print(filename)
-    pic.SetPicture(filename)
-    if 27 == cv2.waitKey(0): # Esc to quit.
+paths = walk(folder, ['.jpg'])
+id = 0
+while True:
+    path = paths[id]
+    print(path)
+    pic.SetPicture(path)
+    key = cv2.waitKeyEx(0)
+    if key in [0x210000, 0x250000, 0x260000]:
+        id = max(id - 1, 0)
+    elif key in [0x220000, 0x270000, 0x280000]:
+        id = min(id + 1, len(paths) - 1)
+    else:
         break
 
 cv2.destroyAllWindows()
