@@ -13,25 +13,17 @@ SCREEN_WIDTH  = 1900
 SCREEN_HEIGHT = 900
 
 
-def MyWalk(path, exts=[]):
+def walk(path, exts=[]):
     result = []
     for root, folders, files in os.walk(path):
         result += [os.path.join(root, file) for file in files if os.path.splitext(file)[1] in exts]
     return result
 
 
-def imread(file):
-    return cv2.imdecode(np.fromfile(file, np.uint8), -1)
-
-
-def imwrite(file, im):
-    cv2.imencode('.jpg', im)[1].tofile(file)
-
-
 class MyPicture:
     def SetPicture(self, file):
         self.log = os.path.splitext(file)[0] + '.txt'
-        img0 = imread(file)
+        img0 = cv2.imdecode(np.fromfile(file, np.uint8), -1)
         h, w, n = img0.shape
         self.k = k = min(SCREEN_WIDTH/w, SCREEN_HEIGHT/h)
         self.img = cv2.resize(img0, (int(w*k), int(h*k)))
@@ -59,7 +51,7 @@ class MyPicture:
             self.OnLeftUp(x, y)
         elif evt == 2:
             self.OnRightDown()
-            
+
     def OnLeftDraw(self, x, y):
         rect_temp = self.rect[:2] + [x, y]
         self.DrawRect(rect_temp, (0, 255, 0))
@@ -91,7 +83,7 @@ cv2.namedWindow('lsx')
 cv2.setMouseCallback('lsx', pic.OnMouse)
 
 
-for filename in MyWalk(folder, ['.jpg']):
+for filename in walk(folder, ['.jpg']):
     print(filename)
     pic.SetPicture(filename)
     if 27 == cv2.waitKey(0): # Esc to quit.
