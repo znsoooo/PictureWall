@@ -21,7 +21,8 @@ def walk(path, exts=[]):
 
 
 class MyPicture:
-    def SetPicture(self, file):
+    def SetPicture(self, file, title):
+        cv2.setWindowTitle('lsx', title)
         self.log = os.path.splitext(file)[0] + '.txt'
         img0 = cv2.imdecode(np.fromfile(file, np.uint8), -1)
         h, w, n = img0.shape
@@ -87,8 +88,8 @@ paths = walk(folder, ['.jpg'])
 id = 0
 while True:
     path = paths[id]
-    print(path)
-    pic.SetPicture(path)
+    title = '(%d/%d) %s' % (id + 1, len(paths), ascii(os.path.basename(path)))
+    pic.SetPicture(path, title)
     key = cv2.waitKeyEx(0)
     if key in [0x210000, 0x250000, 0x260000]:
         id = max(id - 1, 0)
