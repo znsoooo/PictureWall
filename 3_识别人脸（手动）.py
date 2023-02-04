@@ -20,7 +20,7 @@ def walk(path, exts=[]):
     return result
 
 
-class MyPicture:
+class Picture:
     def SetPicture(self, file, title):
         cv2.setWindowTitle('lsx', title)
         self.log = os.path.splitext(file)[0] + '.txt'
@@ -31,21 +31,21 @@ class MyPicture:
         self.ReadLog()
 
     def ReadLog(self):
+        self.rects = []
         if os.path.isfile(self.log):
             with open(self.log) as f:
-                self.rect = [int(float(x) * self.k) for x in f.read().split(',')]
-        else:
-            self.rect = [0, 0, 0, 0]
-        self.DrawRect(self.rect, (255, 0, 0))
+                for rect in f.read().split('\n'):
+                    self.rects.append([int(float(v) * self.k) for v in rect.split(',')])
+        self.DrawRect(self.rects, (255, 0, 0))
 
     def SaveLog(self):
         with open(self.log, 'w') as f:
-            f.write(','.join(str(int(x / self.k)) for x in self.rect))
+            f.write('\n'.join(','.join(str(int(v / self.k)) for v in rect) for rect in self.rects))
 
     def OnMouse(self, evt, x, y, flag, param):
         # print((evt, flag))
         if evt == 0 and flag == 1:
-            self.OnLeftDraw(x, y)
+            self.OnLeftDrag(x, y)
         elif evt == 1:
             self.OnLeftDown(x, y)
         elif evt == 4:
@@ -53,33 +53,36 @@ class MyPicture:
         elif evt == 2:
             self.OnRightDown()
 
-    def OnLeftDraw(self, x, y):
-        rect_temp = self.rect[:2] + [x, y]
-        self.DrawRect(rect_temp, (0, 255, 0))
+    def OnLeftDrag(self, x, y):
+        rect = self.rects[-1] + [x, y]
+        self.DrawRect([rect], (0, 255, 0))
 
     def OnLeftDown(self, x, y):
-        self.rect[:2] = [x, y]
+        self.rects.append([x, y])
 
     def OnLeftUp(self, x, y):
-        self.rect[2:] = [x, y]
-        self.DrawRect(self.rect, (255, 0, 0))
+        self.rects[-1].extend([x, y])
+        self.DrawRect(self.rects, (255, 0, 0))
         self.SaveLog()
 
     def OnRightDown(self):
-        self.DrawRect((0, 0, 0, 0), (255, 0, 0))
-        if os.path.isfile(self.log):
+        if self.rects:
+            self.rects.pop()
+        if not self.rects and os.path.isfile(self.log):
             os.remove(self.log)
+        self.DrawRect(self.rects, (255, 0, 0))
 
-    def DrawRect(self, rect, bgr):
+    def DrawRect(self, rects, bgr):
         img2 = self.img.copy()
-        cv2.rectangle(img2, tuple(rect[:2]), tuple(rect[2:]), bgr, 2)
+        for rect in rects:
+            cv2.rectangle(img2, tuple(rect[:2]), tuple(rect[2:]), bgr, 2)
         cv2.imshow('lsx', img2)
 
 
 folder = '20210122 表单统计'
 
 
-pic = MyPicture()
+pic = Picture()
 cv2.namedWindow('lsx')
 cv2.setMouseCallback('lsx', pic.OnMouse)
 
